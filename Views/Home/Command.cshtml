@@ -1,0 +1,45 @@
+﻿
+@{
+    ViewData["Title"] = "Command";
+}
+<br />
+<div id="exception" style="background-color: RGBA(255,127,39,0.8); padding: 5px; border-radius: 3px;color: #FEFEFE;"></div>
+
+<div id="status"></div>
+<div id="text"></div>
+<script>
+    $(function () {
+        //$.get('../Home/GetCommand', function (data) {
+        //    alert(data);
+        //    var jsonData = JSON.parse(data);
+        //    if (jsonData == 200) {
+        //        $("#status").empty().append(jsonData.status);
+        //        $("#text").empty().append(jsonData.data);
+        //    }
+        //});
+
+        $.ajax({
+            async: true,
+            cache: false,
+            timeout: 60 * 60 * 1000,
+            //data: formdata,
+            type: "GET",
+            contentType: false,
+            processData: false,
+            datatype: "JSON",
+            url: "../Home/GetCommand",
+            error: function () { },
+            success: function (result) {
+                //result = JSON.parse(result);
+                $("#status").append(result.code);
+                if (result.code == "200") {
+                    $("#text").empty().append(result.data);
+                }
+                else if (result.code == "-101") {
+                    $("#exception").append(result.message);
+                }
+            }
+        });
+
+    });
+</script>
