@@ -15,18 +15,28 @@ namespace gm.Controllers
 
             return View();
         }
-        public IActionResult Login()
+        public IActionResult Login(string type)
         {
-            if (Session("id") != null)
-                return RedirectToAction("Index", "Home");
-
+            if (Session("User") != null)
+                return RedirectToAction("index", "console");
+            if (type == "unlogin")
+                ViewData["Message"] = "登录失效或未登录，请重新登录。";
             return View();
         }
 
         [HttpPost]
-        public IActionResult Login(string username, string password, string code, bool remeberme = false)
+        public IActionResult Login(string uname, string pword, string code, bool remember)
         {
-            return Json(new { a = "1" });
+            if (uname == ConsoleController.uname && pword == ConsoleController.pword)
+            {
+                SetSession("User", uname);
+                return RedirectToAction("index", "console");
+            }
+            else
+            {
+                ViewData["Message"] = "用户名或密码错误。";
+                return View();
+            }
         }
 
         private bool Validate()
@@ -39,6 +49,11 @@ namespace gm.Controllers
         private string Session(string name)
         {
             return HttpContext.Session.GetString(name);
+        }
+
+        private void SetSession(string name, string value)
+        {
+            HttpContext.Session.SetString(name, value);
         }
 
         private IActionResult RedirectLogin(bool redirect = true)

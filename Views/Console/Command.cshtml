@@ -1,0 +1,69 @@
+﻿
+@{
+    ViewData["Title"] = "Command";
+}
+<br />
+<br />
+<br />
+<br />
+<div id="exception" style="background-color: RGBA(255,127,39,0.8); padding: 5px; border-radius: 3px;color: #FEFEFE;"></div>
+
+<div id="status"></div>
+<pre id="text" style="height:200px;"></pre>
+<pre id="error" style="height:100px;"></pre>
+
+
+<div class="form-group">
+    <input for="inputCommand" name="inputCommand" id="inputCommand" class="form-control" placeholder="命令" autocomplete="off" />
+</div>
+<div class="form-group">
+    <button name="execCommand" id="execCommand" class="btn btn-primary">发送</button>
+</div>
+@section Scripts{
+    <script>
+        var preText = "", preError = "";
+        var timerFresh;
+        $(function () {
+            GetCommand();
+            timerFresh = window.setInterval("GetCommand()", 1000);
+            $("#exception").hide();
+        });
+
+        $("#execCommand").click(function (e) {
+            var cmd = $("#inputCommand").val()
+            $.post('/console/sendcommand', { command: cmd }, function (result) {
+                if (result.code == "200") {
+                    GetCommand();
+                    $("#inputCommand").val("");
+                }
+                else if (result.code == "-101") {
+                    $("#exception").show();
+                    $("#exception").empty().append(result.message);
+                }
+            });
+        });
+
+        function GetCommand() {
+            $.post('/console/getcommand', function (result) {
+                if (result.code == "200") {
+                    if (!result.status) {
+                        window.clearInterval(timerFresh);
+                        $("#exception").show();
+                        $("#exception").empty().append("目标程序已停止");
+                    }
+                    $("#text").empty().append(result.data);
+                    $("#error").empty().append(result.error);
+                    if (result.data != preText)
+                        $("#text").scrollTop(document.getElementById("text").scrollHeight);
+                    if (result.error != preError)
+                        $("#error").scrollTop(document.getElementById("error").scrollHeight);
+                    preError = result.error;
+                    preText = result.data;
+                }
+                else if (result.code == "-101") {
+                    $("#exception").empty().append(result.message);
+                }
+            });
+        }
+    </script>
+}

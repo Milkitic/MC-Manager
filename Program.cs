@@ -15,7 +15,10 @@ namespace gm
         public static void Main(string[] args)
         {
             //File.Create("root.conf");
-            Controllers.HomeController.root = File.ReadAllText("root.conf");
+            Controllers.ConsoleController.root = File.ReadAllText("root.conf");
+            string[] s_admin = File.ReadAllLines("sadmin.conf");
+            Controllers.ConsoleController.uname = s_admin[0];
+            Controllers.ConsoleController.pword = s_admin[1];
             BuildWebHost(args).Run();
         }
 

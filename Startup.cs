@@ -45,7 +45,7 @@ namespace gm
             {
                 routes.MapRoute(
                     name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
+                    template: "{controller=Front}/{action=Index}/{id?}");
             });
         }
     }

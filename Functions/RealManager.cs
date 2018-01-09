@@ -45,6 +45,15 @@ namespace gm.Functions
             // 如果打开注释，则以同步方式执行命令，此例子中用Exited事件异步执行。  
             // proc.WaitForExit();
         }
+        public void SendMessage(string message)
+        {
+            proc_SendMsg(message);
+        }
+
+        private void proc_SendMsg(string message)
+        {
+            proc.StandardInput.Write(message + "\n");
+        }
         private void proc_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
             string data = e.Data;

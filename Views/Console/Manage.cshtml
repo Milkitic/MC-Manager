@@ -1,0 +1,138 @@
+﻿@model System.IO.FileInfo[]
+@{
+    ViewData["Title"] = "Mod Manager";
+    //Layout = null;
+    string dis = ".disabled";
+
+    string HumanReadableFilesize(double size)
+    {
+        String[] units = new String[] { "B", "KB", "MB", "GB", "TB", "PB" };
+        double mod = 1024.0;
+        int j = 0;
+        while (size >= mod)
+        {
+            size /= mod;
+            j++;
+        }
+        return Math.Round(size, 2) + units[j];
+    }
+}
+<br />
+<br />
+<br />
+<br />
+@if (ViewData["Message"].ToString() != "")
+{
+    <p>@ViewData["Message"]</p>
+}
+<style>
+    .myCenter table tr td {
+        padding-right: 5px;
+        padding-bottom: 2px;
+    }
+
+    .disabled {
+        background-color: RGBA(255,127,39,0.8);
+        color: #FEFEFE;
+        padding: 3px;
+        border-radius: 3px;
+    }
+
+    .enabled {
+        background-color: RGBA(34,177,76,0.05);
+        padding: 3px;
+        border-radius: 3px;
+    }
+</style>
+<div class="myCenter">
+    @{
+        int i = 0;
+    }
+    @if (Model != null)
+    {
+        int pageCount = (int)ViewData["PageCount"];
+        int currentPage = (int)ViewData["CurrentPage"];
+        int pageLength = (int)ViewData["PageLength"];
+
+        <table>
+            <tr>
+                <th>文件名</th>
+                <th>文件大小</th>
+                <th>上次上传时间</th>
+                <th>操作</th>
+                <th>删除</th>
+            </tr>
+            @foreach (var item in Model)
+            {
+                if (item == null)
+                {
+                    break;
+                }
+                <tr>
+                    @if (item.Extension == dis)
+                    {
+                        <td width="70%"><span class="disabled">@item.Name.Replace(".disabled", "")</span></td>
+                    }
+                    else
+                    {
+                        <td width="70%"><span class="enabled">@item.Name.Replace(".disabled", "")</span></td>
+                    }
+                    <td width="10%">@HumanReadableFilesize(item.Length)</td>
+                    <td width="20%">@item.LastWriteTime</td>
+                    <td>
+                        @if (item.Extension == dis)
+                        {
+                            <a asp-area="" asp-controller="console" asp-action="Modify" asp-route-id="@(i + pageLength * (currentPage - 1))" asp-route-enabled="true" class="btn btn-success" style="padding-top:1px;padding-bottom:1px;">启用</a>
+                        }
+                        else
+                        {
+                            <a asp-area="" asp-controller="console" asp-action="Modify" asp-route-id="@(i + pageLength * (currentPage - 1))" asp-route-enabled="false" class="btn btn-warning" style="padding-top:1px;padding-bottom:1px;">禁用</a>
+                        }
+                    </td>
+                    <td>
+                        <a class="btn btn-danger" style="padding-top:1px;padding-bottom:1px;" onclick="confirmDel('@item.Name.Replace("\'","%27").Replace("\"","%22")',@(i + pageLength * (currentPage-1)))">删除</a>
+                    </td>
+                </tr>
+                i++;
+            }
+        </table>
+
+        @for (int ii = 1; ii <= pageCount; ii++)
+        {
+            if (ii == currentPage)
+            {
+                <strong>@ii</strong> <text>&nbsp</text>
+            }
+            else
+            {
+                <a href="/console/manage?page=@ii">@ii</a> <text>&nbsp</text>
+            }
+        }
+    }
+</div>
+@section Scripts{
+    <script type="text/javascript">
+        function confirmDel(name, id) {
+            var mymessage = confirm("确认删除：" + name + "？\n文件不可恢复。");
+            if (mymessage == true) {
+                window.location.href = '/console/delete?id=' + id;
+            }
+        }
+        $(function () {
+            $("#province").change(function () {
+                if (this.value === 0) {
+                    return;
+                } else {
+                    $.get("/admina/getArea", { "provinceId": this.value }, function (data) {
+                        var jsonData = $.parseJSON(data);
+                        var str = "<option value='0'>请选择</option>";
+                        for (var i in jsonData) {
+                            str += "<option value=" + jsonData[i].pk + ">" + jsonData[i].fields.areaName + "</option>";
+                        }
+                        $("#area").empty().append(str);
+                    });
+                }
+            });
+        });
+    </script>
+}
