@@ -268,7 +268,10 @@ namespace gm.Controllers
         private IActionResult RedirectLogin(bool redirect = true)
         {
             if (redirect)
+            {
+                Response.StatusCode = 403;
                 return RedirectToAction("login", "front", new { type = "unlogin" });
+            }
             else
                 return RedirectToAction("login", "front");
         }
