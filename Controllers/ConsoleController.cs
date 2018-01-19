@@ -48,7 +48,7 @@ namespace gm.Controllers
                 else
                     page = 1;
             }
-            int length = 16;
+            int length = 10;
             ViewData["Message"] = "";
             try
             {
@@ -196,8 +196,19 @@ namespace gm.Controllers
                     //rm.RealAction("systeminfo", "");
                     else
                     {
-                        rm.RealAction("bash", "");
-                        rm.SendMessage("cat /proc/version;lsb_release -a;exit");
+                        string[] mcRoot = new string[2];
+                        string[] tmpRoot = System.IO.File.ReadAllText("MC.conf").Split("|");
+                        if (tmpRoot.Length != 2)
+                            throw new Exception("运行时出错。");
+                        else
+                        {
+                            mcRoot[0] = tmpRoot[0];
+                            mcRoot[1] = tmpRoot[1];
+                        }
+
+                        rm.RealAction(mcRoot[0], mcRoot[1]);
+                        //rm.RealAction("bash", "");
+                        //rm.SendMessage("cat /proc/version;lsb_release -a;exit");
                     }
 
                 }

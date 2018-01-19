@@ -1,5 +1,12 @@
 ﻿<script>
     var t = setTimeout("window.location.href='/console/manage'", 1500)
 </script>
-<br />
-<p style="background-color: RGBA(34,177,76,0.8); padding: 5px; border-radius: 3px;color: #FEFEFE;">@ViewData["Message"]</p>
+<section class="wrapper">
+    <h3>
+        <i class="fa fa-angle-right"></i> 信息
+    </h3>
+    <div class="col-md-12">
+        <div class="alert alert-success" style="margin-top:40px;">@ViewData["Message"]</div>
+    </div>
+</section>
+

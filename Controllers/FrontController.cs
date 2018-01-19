@@ -13,7 +13,7 @@ namespace gm.Controllers
         {
             ViewData["Message"] = "这里是主页";
 
-            return View();
+            return RedirectToAction("login","front");
         }
         public IActionResult Login(string type)
         {

@@ -1,6 +1,6 @@
 ﻿@model System.IO.FileInfo[]
 @{
-    ViewData["Title"] = "Mod Manager";
+    ViewData["Title"] = "Mod管理";
     //Layout = null;
     string dis = ".disabled";
 
@@ -17,34 +17,16 @@
         return Math.Round(size, 2) + units[j];
     }
 }
-<br />
-<br />
-<br />
-<br />
-@if (ViewData["Message"].ToString() != "")
-{
-    <p>@ViewData["Message"]</p>
-}
-<style>
-    .myCenter table tr td {
-        padding-right: 5px;
-        padding-bottom: 2px;
+<section class="wrapper">
+    <h3>
+        <i class="fa fa-angle-right"></i> @ViewData["Title"]
+    </h3>
+    @if (ViewData["Message"].ToString() != "")
+    {
+        <div class="alert alert-danger">
+            @ViewData["Message"]
+        </div>
     }
-
-    .disabled {
-        background-color: RGBA(255,127,39,0.8);
-        color: #FEFEFE;
-        padding: 3px;
-        border-radius: 3px;
-    }
-
-    .enabled {
-        background-color: RGBA(34,177,76,0.05);
-        padding: 3px;
-        border-radius: 3px;
-    }
-</style>
-<div class="myCenter">
     @{
         int i = 0;
     }
@@ -54,63 +36,129 @@
         int currentPage = (int)ViewData["CurrentPage"];
         int pageLength = (int)ViewData["PageLength"];
 
-        <table>
-            <tr>
-                <th>文件名</th>
-                <th>文件大小</th>
-                <th>上次上传时间</th>
-                <th>操作</th>
-                <th>删除</th>
-            </tr>
-            @foreach (var item in Model)
-            {
-                if (item == null)
-                {
-                    break;
-                }
-                <tr>
-                    @if (item.Extension == dis)
-                    {
-                        <td width="70%"><span class="disabled">@item.Name.Replace(".disabled", "")</span></td>
-                    }
-                    else
-                    {
-                        <td width="70%"><span class="enabled">@item.Name.Replace(".disabled", "")</span></td>
-                    }
-                    <td width="10%">@HumanReadableFilesize(item.Length)</td>
-                    <td width="20%">@item.LastWriteTime</td>
-                    <td>
-                        @if (item.Extension == dis)
+        <div class="row mt">
+            <div class="col-md-12">
+                <div class="content-panel">
+                    <table class="table table-striped table-advance table-hover">
+                        <h4>
+                            <i class="fa fa-angle-right"></i> Mod列表
+                        </h4>
+                        <hr>
+                        <thead>
+                            <tr>
+                                <th>
+                                    <i class="fa fa-bullhorn"></i> 文件名
+                                </th>
+                                <th class="hidden-phone">
+                                    <i class="fa fa-question-circle"></i> 大小
+                                </th>
+                                <th>
+                                    <i class="fa fa-bookmark"></i> 上传时间
+                                </th>
+                                <th>
+                                    <i class=" fa fa-edit"></i> 状态
+                                </th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                if (item == null)
+                                {
+                                    break;
+                                }
+                                var time = item.LastWriteTime;
+                                <tr>
+                                    <td>@item.Name.Replace(".disabled", "")</td>
+
+                                    <td width="10%">@HumanReadableFilesize(item.Length)</td>
+                                    <td width="20%">@((time.Year.ToString().Length == 4 ? time.Year.ToString().Substring(2, 2) : time.Year.ToString()) + "/" + time.Month + "/" + time.Day + " " + time.Hour + ":" + time.Minute + ":" + time.Second)</td>
+
+                                    <td>
+                                        @if (item.Extension == dis)
+                                        {
+                                            <span class="label label-warning label-mini">未启用</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="label label-success label-mini">已启用</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (item.Extension == dis)
+                                        {
+                                            <a class="btn btn-success btn-xs" asp-area="" asp-controller="console" asp-action="Modify" asp-route-id="@(i + pageLength * (currentPage - 1))" asp-route-enabled="true">
+                                                <i class="fa fa-check"></i>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a class="btn btn-warning btn-xs" asp-area="" asp-controller="console" asp-action="Modify" asp-route-id="@(i + pageLength * (currentPage - 1))" asp-route-enabled="false">
+                                                <i class="fa fa-ban"></i>
+                                            </a>
+                                        }
+                                        <button class="btn btn-primary btn-xs">
+                                            <i class="fa fa-pencil"></i>
+                                        </button>
+                                        <a class="btn btn-danger btn-xs" onclick="confirmDel('@item.Name.Replace("\'","%27").Replace("\"","%22")',@(i + pageLength * (currentPage-1)))">
+                                            <i class="fa fa-trash-o "></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                i++;
+                            }
+                        </tbody>
+                    </table>
+
+                    <ul class="pagination pagination-sm" style="margin-left:5px;">
+
+                        @if (currentPage != 1)
                         {
-                            <a asp-area="" asp-controller="console" asp-action="Modify" asp-route-id="@(i + pageLength * (currentPage - 1))" asp-route-enabled="true" class="btn btn-success" style="padding-top:1px;padding-bottom:1px;">启用</a>
+                            <li><a href="/console/manage?page=@(currentPage-1)">&laquo;</a></li>
                         }
                         else
                         {
-                            <a asp-area="" asp-controller="console" asp-action="Modify" asp-route-id="@(i + pageLength * (currentPage - 1))" asp-route-enabled="false" class="btn btn-warning" style="padding-top:1px;padding-bottom:1px;">禁用</a>
+                            <li class="disabled"><a>&laquo;</a></li>
                         }
-                    </td>
-                    <td>
-                        <a class="btn btn-danger" style="padding-top:1px;padding-bottom:1px;" onclick="confirmDel('@item.Name.Replace("\'","%27").Replace("\"","%22")',@(i + pageLength * (currentPage-1)))">删除</a>
-                    </td>
-                </tr>
-                i++;
-            }
-        </table>
+                        @for (int ii = 1; ii <= pageCount; ii++)
+                        {
+                            if (ii == currentPage)
+                            {
+                                <li class="active">
+                                    <a>@ii</a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li>
+                                    <a href="/console/manage?page=@ii">@ii</a>
+                                </li>
+                            }
+                        }
 
-        @for (int ii = 1; ii <= pageCount; ii++)
-        {
-            if (ii == currentPage)
-            {
-                <strong>@ii</strong> <text>&nbsp</text>
-            }
-            else
-            {
-                <a href="/console/manage?page=@ii">@ii</a> <text>&nbsp</text>
-            }
-        }
+                        @if (currentPage != pageCount)
+                        {
+                            <li><a href="/console/manage?page=@(currentPage + 1)">&raquo;</a></li>
+                        }
+                        else
+                        {
+                            <li class="disabled"><a>&raquo;</a></li>
+                        }
+                    </ul>
+                </div>
+                <!-- /content-panel -->
+            </div>
+            <!-- /col-md-12 -->
+        </div>
+        <!-- /row -->
     }
-</div>
+</section>
+<!--/wrapper -->
+
 @section Scripts{
+    <script src="~/console/js/common-scripts.js"></script>
+
     <script type="text/javascript">
         function confirmDel(name, id) {
             var mymessage = confirm("确认删除：" + name + "？\n文件不可恢复。");
