@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Http;
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -49,7 +50,7 @@
                 <div class="fa fa-bars tooltips" data-placement="right" data-original-title="Toggle Navigation"></div>
             </div>
             <!--logo start-->
-            <a href="index.html" class="logo"><b>MP5 Lite</b></a>
+            <a asp-action="index" asp-controller="front" class="logo"><b>MP5 Lite</b></a>
             <!--logo end-->
             <div class="nav notify-row" id="top_menu">
                 <!--  notification start -->
@@ -58,7 +59,7 @@
                     <li class="dropdown">
                         <a data-toggle="dropdown" class="dropdown-toggle" href="index.html#">
                             <i class="fa fa-tasks"></i>
-                            <span class="badge bg-theme">4</span>
+                            <span class="badge bg-theme" style="display:none">4</span>
                         </a>
                         <ul class="dropdown-menu extended tasks-bar">
                             <div class="notify-arrow notify-arrow-green"></div>
@@ -127,64 +128,30 @@
                     <li id="header_inbox_bar" class="dropdown">
                         <a data-toggle="dropdown" class="dropdown-toggle" href="index.html#">
                             <i class="fa fa-envelope-o"></i>
-                            <span class="badge bg-theme">5</span>
+                            <span id="userComment" class="badge bg-theme" style="display:none">5</span>
                         </a>
-                        <ul class="dropdown-menu extended inbox">
+                        <ul class="dropdown-menu extended inbox" id="ajaxFather">
                             <div class="notify-arrow notify-arrow-green"></div>
                             <li>
-                                <p class="green">You have 5 new messages</p>
+                                <p class="green">你有 <span id="messageCount">5</span> 则新消息</p>
                             </li>
-                            <li>
-                                <a href="index.html#">
-                                    <span class="photo"><img alt="avatar" src="~/console/img/ui-zac.jpg"></span>
-                                    <span class="subject">
-                                        <span class="from">Zac Snider</span>
-                                        <span class="time">Just now</span>
-                                    </span>
-                                    <span class="message">
-                                        Hi mate, how is everything?
-                                    </span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="index.html#">
-                                    <span class="photo"><img alt="avatar" src="~/console/img/ui-divya.jpg"></span>
-                                    <span class="subject">
-                                        <span class="from">Divya Manian</span>
-                                        <span class="time">40 mins.</span>
-                                    </span>
-                                    <span class="message">
-                                        Hi, I need your help with this.
-                                    </span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="index.html#">
-                                    <span class="photo"><img alt="avatar" src="~/console/img/ui-danro.jpg"></span>
-                                    <span class="subject">
-                                        <span class="from">Dan Rogers</span>
-                                        <span class="time">2 hrs.</span>
-                                    </span>
-                                    <span class="message">
-                                        Love your new Dashboard.
-                                    </span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="index.html#">
-                                    <span class="photo"><img alt="avatar" src="~/console/img/ui-sherman.jpg"></span>
-                                    <span class="subject">
-                                        <span class="from">Dj Sherman</span>
-                                        <span class="time">4 hrs.</span>
-                                    </span>
-                                    <span class="message">
-                                        Please, answer asap.
-                                    </span>
-                                </a>
-                            </li>
-                            <li>
+                            <div id="someAjax">
+                                @*<li>
+                                        <a href="#">
+                                            <span class="photo"><img alt="avatar" src="~/console/img/ui-danro.jpg"></span>
+                                            <span class="subject">
+                                                <span class="from">Dan Rogers</span>
+                                                <span class="time">2 hrs.</span>
+                                            </span>
+                                            <span class="message">
+                                                Love your new Dashboard.
+                                            </span>
+                                        </a>
+                                    </li>*@
+                            </div>
+                            @*<li>
                                 <a href="index.html#">See all messages</a>
-                            </li>
+                            </li>*@
                         </ul>
                     </li>
                     <!-- inbox dropdown end -->
@@ -193,7 +160,7 @@
             </div>
             <div class="top-menu">
                 <ul class="nav pull-right top-menu">
-                    <li><a asp-action="loginout" asp-controller="console" class="logout">退出登录</a></li>
+                    <li><a asp-action="loginout" asp-controller="console" class="logout">登出</a></li>
                 </ul>
             </div>
         </header>
@@ -207,89 +174,99 @@
                 <!-- sidebar menu start-->
                 <ul class="sidebar-menu" id="nav-accordion">
 
-                    <p class="centered"><a href="profile.html"><img src="~/console/img/ui-sam.jpg" class="img-circle" width="60"></a></p>
-                    <h5 class="centered">Marcel Newman</h5>
+                    <p class="centered"><a href="profile.html"><img src="https://a.ppy.sh/1243669_1511267784.jpg" class="img-circle" width="60"></a></p>
+                    <h5 class="centered">@ViewData["User"]</h5>
 
                     <li class="mt">
-                        <a asp-action="index" class="active">
+                        <a asp-action="index" class="@(ViewData["Current"].ToString()=="1"?"active":"")">
                             <i class="fa fa-dashboard"></i>
                             <span>总览</span>
                         </a>
                     </li>
                     <li class="sub-menu">
-                        <a href="javascript:;">
-                            <i class="fa fa-magic"></i>
-                            <span>先这么摆着</span>
+                        <a asp-action="command" class="@(ViewData["Current"].ToString()=="2"?"active":"")">
+                            <i class="fa fa-terminal"></i>
+                            <span>
+                                控制台 @if (ViewData["Running"] != null)
+                                {
+                                    <span class="badge-hot" style="margin-left:4px; width:8px;height:8px;"></span>
+                                }
+                            </span>
+                        </a>
+                    </li>
+                    <li class="sub-menu">
+                        <a href="javascript:;" class="@(ViewData["Current"].ToString()=="3"?"active":"")">
+                            <i class="fa fa-puzzle-piece"></i>
+                            <span>模组</span>
                         </a>
                         <ul class="sub">
-                            <li><a asp-action="command">控制台</a></li>
                             <li><a asp-action="manage">Mod管理</a></li>
                             <li><a asp-action="upload">Mod上传</a></li>
                         </ul>
                     </li>
-                    <li class="sub-menu">
-                        <a href="javascript:;">
-                            <i class="fa fa-desktop"></i>
-                            <span>UI Elements</span>
-                        </a>
-                        <ul class="sub">
-                            <li><a href="general.html">General</a></li>
-                            <li><a href="buttons.html">Buttons</a></li>
-                            <li><a href="panels.html">Panels</a></li>
-                        </ul>
-                    </li>
+                    @*<li class="sub-menu">
+                            <a href="javascript:;">
+                                <i class="fa fa-desktop"></i>
+                                <span>UI Elements</span>
+                            </a>
+                            <ul class="sub">
+                                <li><a href="general.html">General</a></li>
+                                <li><a href="buttons.html">Buttons</a></li>
+                                <li><a href="panels.html">Panels</a></li>
+                            </ul>
+                        </li>
 
-                    <li class="sub-menu">
-                        <a href="javascript:;">
-                            <i class="fa fa-cogs"></i>
-                            <span>Components</span>
-                        </a>
-                        <ul class="sub">
-                            <li><a href="calendar.html">Calendar</a></li>
-                            <li><a href="gallery.html">Gallery</a></li>
-                            <li><a href="todo_list.html">Todo List</a></li>
-                        </ul>
-                    </li>
-                    <li class="sub-menu">
-                        <a href="javascript:;">
-                            <i class="fa fa-book"></i>
-                            <span>Extra Pages</span>
-                        </a>
-                        <ul class="sub">
-                            <li><a href="blank.html">Blank Page</a></li>
-                            <li><a href="login.html">Login</a></li>
-                            <li><a href="lock_screen.html">Lock Screen</a></li>
-                        </ul>
-                    </li>
-                    <li class="sub-menu">
-                        <a href="javascript:;">
-                            <i class="fa fa-tasks"></i>
-                            <span>Forms</span>
-                        </a>
-                        <ul class="sub">
-                            <li><a href="form_component.html">Form Components</a></li>
-                        </ul>
-                    </li>
-                    <li class="sub-menu">
-                        <a href="javascript:;">
-                            <i class="fa fa-th"></i>
-                            <span>Data Tables</span>
-                        </a>
-                        <ul class="sub">
-                            <li><a href="basic_table.html">Basic Table</a></li>
-                            <li><a href="responsive_table.html">Responsive Table</a></li>
-                        </ul>
-                    </li>
-                    <li class="sub-menu">
-                        <a href="javascript:;">
-                            <i class=" fa fa-bar-chart-o"></i>
-                            <span>Charts</span>
-                        </a>
-                        <ul class="sub">
-                            <li><a href="morris.html">Morris</a></li>
-                            <li><a href="chartjs.html">Chartjs</a></li>
-                        </ul>
-                    </li>
+                        <li class="sub-menu">
+                            <a href="javascript:;">
+                                <i class="fa fa-cogs"></i>
+                                <span>Components</span>
+                            </a>
+                            <ul class="sub">
+                                <li><a href="calendar.html">Calendar</a></li>
+                                <li><a href="gallery.html">Gallery</a></li>
+                                <li><a href="todo_list.html">Todo List</a></li>
+                            </ul>
+                        </li>
+                        <li class="sub-menu">
+                            <a href="javascript:;">
+                                <i class="fa fa-book"></i>
+                                <span>Extra Pages</span>
+                            </a>
+                            <ul class="sub">
+                                <li><a href="blank.html">Blank Page</a></li>
+                                <li><a href="login.html">Login</a></li>
+                                <li><a href="lock_screen.html">Lock Screen</a></li>
+                            </ul>
+                        </li>
+                        <li class="sub-menu">
+                            <a href="javascript:;">
+                                <i class="fa fa-tasks"></i>
+                                <span>Forms</span>
+                            </a>
+                            <ul class="sub">
+                                <li><a href="form_component.html">Form Components</a></li>
+                            </ul>
+                        </li>
+                        <li class="sub-menu">
+                            <a href="javascript:;">
+                                <i class="fa fa-th"></i>
+                                <span>Data Tables</span>
+                            </a>
+                            <ul class="sub">
+                                <li><a href="basic_table.html">Basic Table</a></li>
+                                <li><a href="responsive_table.html">Responsive Table</a></li>
+                            </ul>
+                        </li>
+                        <li class="sub-menu">
+                            <a href="javascript:;">
+                                <i class=" fa fa-bar-chart-o"></i>
+                                <span>Charts</span>
+                            </a>
+                            <ul class="sub">
+                                <li><a href="morris.html">Morris</a></li>
+                                <li><a href="chartjs.html">Chartjs</a></li>
+                            </ul>
+                        </li>*@
 
                 </ul>
                 <!-- sidebar menu end-->
@@ -349,6 +326,41 @@
     <script type="text/javascript" src="~/console/js/gritter-conf.js"></script>
 
     <!--script for this page-->
+    <script>
+        $.post('/console/getmessages', function (result) {
+            if (result.code == "200") {
+                if (result.count == 0) {
+                    $("#userComment").hide();
+                    $("#someAjax").append('<li><a><span class="subject"><span class="message">暂无新消息</span></a></li>');
+                    $("#userComment").text("0")
+                    $("#messageCount").text("0")
+                }
+                else {
+                    $("#userComment").show();
+                    var data = result.data;
+                    for (var i = 0; i < data.length; i++) {
+                        $("#someAjax").append('<li><a><span class="subject"><span class="subject"><span class="from">' + HTMLEncode(data[i].userName) +
+                            '</span><span class="time" title="' + data[i].serverTime + '">' + data[i].timeCountDown +
+                            '</span></span><span class="message">' + HTMLEncode(data[i].comment) +
+                            '</span><span class="message" style="color:#AAA;cursor:pointer" onclick="window.location.href=\'/console/markmessage?id=' + data[i].id +
+                            '\'">标记</span></a></li>');
+                    }
+                    $("#ajaxFather").append('<li><a href="/console/markallmessages">标记全部</a></li>');
+                    $("#userComment").text(result.count > 99 ? "99+" : result.count)
+                    $("#messageCount").text(result.count)
+                }
+
+            }
+        });
+
+        function HTMLEncode(html) {
+            var temp = document.createElement("div");
+            (temp.textContent != null) ? (temp.textContent = html) : (temp.innerText = html);
+            var output = temp.innerHTML;
+            temp = null;
+            return output;
+        }
+    </script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>

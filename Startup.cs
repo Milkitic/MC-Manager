@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using gm.Functions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -24,6 +25,8 @@ namespace gm
             services.AddMvc();
             services.AddDistributedMemoryCache();
             services.AddSession();
+            //services.Add(new ServiceDescriptor(typeof(DbHelper), new DbHelper(Configuration.GetConnectionString("DefaultConnection"))));
+            DataBase.DbHelper = new DbHelper(Configuration.GetConnectionString("DefaultConnection"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -41,7 +44,7 @@ namespace gm
 
             app.UseStaticFiles();
             app.UseSession();
-
+            //Microsoft.AspNetCore.Http.HttpContext.RequestServices.GetService(typeof(DbHelper)) as DbHelper;
             app.UseMvc(routes =>
             {
                 routes.MapRoute(

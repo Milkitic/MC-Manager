@@ -11,6 +11,8 @@ using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using gm.Models.Function;
+using gm.BLL;
 
 namespace gm.Controllers
 {
@@ -26,8 +28,16 @@ namespace gm.Controllers
         {
             if (!Validate())
                 return RedirectLogin();
-            ViewData["Message"] = "这里是主页";
 
+            if (files == null) GetFiles();
+            ViewData["Message"] = "这里是主页";
+            ViewData["Current"] = "1";
+            int count = 0;
+            foreach (var item in files)
+            {
+                if (item.Extension == ".jar" || item.Extension == ".zip") count++;
+            }
+            ViewData["FileCount"] = count;
             return View();
         }
         public IActionResult LoginOut()
@@ -36,11 +46,12 @@ namespace gm.Controllers
 
             return RedirectToAction("index", "front");
         }
+
         public IActionResult Manage(int? page)
         {
             if (!Validate())
                 return RedirectLogin();
-
+            ViewData["Current"] = "3";
             if (page == null || page < 1)
             {
                 if (Session("PageCount") != null)
@@ -52,10 +63,10 @@ namespace gm.Controllers
             ViewData["Message"] = "";
             try
             {
-                files = new DirectoryInfo(root).GetFiles();
+                FileInfo[] files_new = new FileInfo[length];
+                GetFiles();
                 int offset = length * ((int)page - 1);
                 if (offset > files.Length - 1) throw new Exception();
-                FileInfo[] files_new = new FileInfo[length];
                 int j = 0;
                 for (int i = offset; i < length + offset; i++)
                 {
@@ -82,6 +93,7 @@ namespace gm.Controllers
         {
             if (!Validate())
                 return RedirectLogin();
+            ViewData["Current"] = "3";
             try
             {
                 FileInfo fi = files[id];
@@ -109,6 +121,7 @@ namespace gm.Controllers
         {
             if (!Validate())
                 return RedirectLogin();
+            ViewData["Current"] = "3";
             try
             {
                 FileInfo fi = files[id];
@@ -129,13 +142,15 @@ namespace gm.Controllers
             if (!Validate())
                 return RedirectLogin();
             ViewData["Message"] = "";
-
+            ViewData["Current"] = "3";
             return View();
         }
 
         [HttpPost]
         public IActionResult Upload(string remark, FileViewModel file)
         {
+            if (!Validate())
+                return RedirectLogin();
             try
             {
                 string fileName;
@@ -182,17 +197,19 @@ namespace gm.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
+        // Command
         public IActionResult Command()
         {
             if (!Validate())
                 return RedirectLogin();
+            ViewData["Current"] = "2";
             if (rm == null || rm.Status == false)
             {
                 rm = new RealManager();
                 try
                 {
-                    if (Directory.Exists("c:\\"))
-                        rm.RealAction("systeminfo", "");
+                    if (Directory.Exists(@"C:\"))
+                        rm.RealAction("cmd", "");
                     //rm.RealAction("systeminfo", "");
                     else
                     {
@@ -206,7 +223,14 @@ namespace gm.Controllers
                             mcRoot[1] = tmpRoot[1];
                         }
 
-                        rm.RealAction(mcRoot[0], mcRoot[1]);
+                        try
+                        {
+                            rm.RealAction(mcRoot[0], mcRoot[1]);
+                        }
+                        catch (Exception)
+                        {
+
+                        }
                         //rm.RealAction("bash", "");
                         //rm.SendMessage("cat /proc/version;lsb_release -a;exit");
                     }
@@ -226,28 +250,63 @@ namespace gm.Controllers
         }
 
         [HttpPost]
-        public IActionResult GetCommand()
+        public IActionResult GetFullCommand()
         {
+            if (!Validate())
+                return null;
             return Json(new
             {
                 code = "200",
                 status = rm.Status,
-                data = rm.OutputData.ToString(),
-                error = rm.ErrorData.ToString()
+                data = rm.FullData.ToString(),
+                error = rm.FullError.ToString()
+            });
+        }
+        [HttpPost]
+        public IActionResult GetCommand()
+        {
+            if (!Validate())
+                return null;
+            string data = rm.GetBufferData(), error = rm.GetBufferError();
+            if (data.Trim() == "" && error.Trim() == "")
+                return Json(new
+                {
+                    code = "000"
+                });
+
+            return Json(new
+            {
+                code = "200",
+                status = rm.Status,
+                data,
+                error
             });
         }
 
         [HttpPost]
-        public IActionResult SendCommand(string command)
+        public IActionResult SendCommand(string command, bool autoCmd = false)
         {
+            if (!Validate())
+                return null;
             try
             {
-                rm.SendMessage(command);
-                return Json(new
+                rm.SendMessage(command, autoCmd);
+                if (autoCmd)
                 {
-                    code = "200",
-                    message = "success"
-                });
+                    return Json(new
+                    {
+                        code = "200",
+                        message = "success"
+                    });
+                }
+                else
+                {
+                    return Json(new
+                    {
+                        code = "200",
+                        message = "success"
+                    });
+                }
             }
             catch (Exception ex)
             {
@@ -258,10 +317,84 @@ namespace gm.Controllers
                 });
             }
         }
+
+        // Message
+        [HttpPost]
+        public IActionResult GetMessages()
+        {
+            if (!Validate())
+                return null;
+
+            BLL_Chat bll_chat = new BLL_Chat();
+            List<ServerUser> list = bll_chat.GetChatListOrderByTime(0, 10);
+
+            return Json(new
+            {
+                code = "200",
+                count = list.Count,
+                data = list
+            });
+
+        }
+
+        [HttpGet]
+        public IActionResult MarkMessage(int id)
+        {
+            if (!Validate())
+                return null;
+
+            BLL_Chat bll_chat = new BLL_Chat();
+            try
+            {
+                int result = bll_chat.MarkChatById(id);
+                return Json(new
+                {
+                    code = "200"
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    code = "-101",
+                    message = ex.Message
+                });
+            }
+        }
+
+        public IActionResult MarkAllMessages()
+        {
+            if (!Validate())
+                return null;
+
+            BLL_Chat bll_chat = new BLL_Chat();
+            try
+            {
+                int result = bll_chat.MarkAllChat();
+                return Json(new
+                {
+                    code = "200"
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    code = "-101",
+                    message = ex.Message
+                });
+            }
+        }
+
         private bool Validate()
         {
             if (Session("User") == null)
                 return false;
+            ViewData["User"] = Session("User");
+            if (rm != null && rm.Status != false)
+            {
+                ViewData["Running"] = "";
+            }
             return true;
         }
 
@@ -276,6 +409,7 @@ namespace gm.Controllers
             else
                 HttpContext.Session.SetString(name, value);
         }
+
         private IActionResult RedirectLogin(bool redirect = true)
         {
             if (redirect)
@@ -285,6 +419,11 @@ namespace gm.Controllers
             }
             else
                 return RedirectToAction("login", "front");
+        }
+
+        private static void GetFiles()
+        {
+            files = new DirectoryInfo(root).GetFiles();
         }
     }
 }

@@ -13,14 +13,17 @@
                 <div id="exception" class="alert alert-warning">&nbsp;</div>
 
                 <div id="status"></div>
-                <pre id="text" style="height:360px;"></pre>
+                <div class="form-group">
+                    <pre id="text" style="height:360px;"></pre>
+                </div>
                 <pre id="error" style="height:100px; display:none;"></pre>
 
                 <div class="form-group">
-                    <input for="inputCommand" name="inputCommand" id="inputCommand" class="form-control" placeholder="命令" autocomplete="off" />
+                    <input for="inputCommand" style="width:100%;" name="inputCommand" id="inputCommand" class="form-control" placeholder="命令" autocomplete="off" />
                 </div>
                 <div class="form-group">
-                    <button name="execCommand" id="execCommand" class="btn btn-default">发送</button>
+                    <button name="execCommand" id="execCommand" class="btn btn-default btn-sm"><i class="fa fa-terminal"></i></button>
+                    <button name="execUsers" id="execUsers" class="btn btn-default btn-sm"><i class="fa fa-users"></i></button>
                 </div>
             </div>
         </div>
@@ -31,9 +34,15 @@
         var preText = "", preError = "";
         var timerFresh;
         $(function () {
-            GetCommand();
+            GetFullCommand();
             timerFresh = window.setInterval("GetCommand()", 1000);
             //$("#exception").hide();
+        });
+
+        $("#inputCommand").keydown(function () {
+            if (event.keyCode == "13") {//keyCode=13是回车键
+                $('#execCommand').click();
+            }
         });
 
         $("#execCommand").click(function (e) {
@@ -49,7 +58,43 @@
                 }
             });
         });
-
+        $("#execUsers").click(function (e) {
+            var cmd = "list";
+            $.post('/console/sendcommand', { command: cmd, autoCmd: true }, function (result) {
+                if (result.code == "200") {
+                    GetCommand();
+                    $("#inputCommand").val("");
+                }
+                else if (result.code == "-101") {
+                    $("#exception").show();
+                    $("#exception").empty().append(result.message);
+                }
+            });
+        });
+        function GetFullCommand() {
+            $.post('/console/getfullcommand', function (result) {
+                if (result.code == "200") {
+                    if (!result.status) {
+                        window.clearInterval(timerFresh);
+                        $("#exception").show();
+                        $("#exception").empty().append("服务器已停止运行。");
+                    }
+                    if (result.data != preText) {
+                        $("#text").empty().text(result.data);
+                        $("#text").scrollTop(document.getElementById("text").scrollHeight);
+                    }
+                    if (result.error != preError) {
+                        $("#error").empty().text(result.error);
+                        $("#error").scrollTop(document.getElementById("error").scrollHeight);
+                    }
+                    preError = result.error;
+                    preText = result.data;
+                }
+                else if (result.code == "-101") {
+                    $("#exception").empty().append(result.message);
+                }
+            });
+        }
         function GetCommand() {
             $.post('/console/getcommand', function (result) {
                 if (result.code == "200") {
@@ -59,15 +104,17 @@
                         $("#exception").empty().append("服务器已停止运行。");
                     }
                     if (result.data != preText) {
-                        $("#text").empty().append(result.data);
+                        $("#text").text($("#text").text() + result.data);
                         $("#text").scrollTop(document.getElementById("text").scrollHeight);
                     }
                     if (result.error != preError) {
-                        $("#error").empty().append(result.error);
+                        $("#error").text($("#error").text() + result.error);
                         $("#error").scrollTop(document.getElementById("error").scrollHeight);
                     }
                     preError = result.error;
                     preText = result.data;
+                } else if (result.code == "000") {
+                    // todo
                 }
                 else if (result.code == "-101") {
                     $("#exception").empty().append(result.message);
